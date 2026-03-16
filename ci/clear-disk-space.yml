@@ -1,0 +1,59 @@
+# This workflow frees up disk space on GitHub-hosted Ubuntu runners.
+# Useful for jobs that require large amounts of disk space, such as
+# building large Docker images or compiling resource-intensive projects.
+
+name: Clear Disk Space
+
+on:
+  push:
+    branches: [ $default-branch ]
+  pull_request:
+    branches: [ $default-branch ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Free up disk space before the main build steps.
+      # GitHub-hosted runners come with many pre-installed tools that may
+      # not be needed, and removing them can recover 20-30 GB of space.
+      - name: Free disk space
+        run: |
+          echo "Disk usage before cleanup:"
+          df -h
+
+          # Remove large pre-installed tool sets that are often not needed
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /opt/hostedtoolcache/CodeQL
+
+          # Remove large apt packages
+          sudo apt-get remove -y --purge \
+            aria2 ansible azure-cli shellcheck rpm xorriso zsync \
+            esl-erlang firefox gfortran-8 gfortran-9 google-chrome-stable \
+            google-cloud-sdk imagemagick \
+            libmagickcore-dev libmagickwand-dev libprotobuf-dev libpython2-dev \
+            libpython2.7 libpython2.7-dev libpython3-dev \
+            mercurial mono-complete mysql-client libmysqlclient-dev \
+            php-common php7.4 php7.4-common php8.0 php8.0-common \
+            powershell ruby-full snapd subversion \
+            || true
+          sudo apt-get autoremove -y || true
+          sudo apt-get clean || true
+
+          # Clear Docker images
+          docker image prune -a -f || true
+
+          echo "Disk usage after cleanup:"
+          df -h
+
+      # Add your build steps below
+      - name: Run a one-line script
+        run: echo Hello, world!
