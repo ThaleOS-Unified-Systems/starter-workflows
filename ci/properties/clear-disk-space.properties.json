@@ -1,0 +1,6 @@
+{
+    "name": "Clear Disk Space",
+    "description": "Free up disk space on GitHub-hosted Ubuntu runners before running resource-intensive build steps.",
+    "iconName": "blank",
+    "categories": ["Continuous integration"]
+}
